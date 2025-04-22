@@ -1,0 +1,6 @@
+@HealthCheckDemo_HostAddress = http://localhost:5067
+
+GET {{HealthCheckDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
