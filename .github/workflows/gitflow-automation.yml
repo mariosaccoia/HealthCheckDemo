@@ -1,0 +1,132 @@
+name: GitFlow Automation
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ develop, main ]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'create-release'
+        type: choice
+        options:
+          - create-release
+          - finish-release
+          - create-hotfix
+      version:
+        description: 'Version (for create-release or create-hotfix)'
+        required: false
+        default: ''
+
+jobs:
+  process-gitflow:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+    # Crea una nuova release branch da develop
+    - name: Create Release Branch
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'create-release'
+      run: |
+        VERSION=${{ github.event.inputs.version }}
+        if [ -z "$VERSION" ]; then
+          echo "Version is required for create-release action"
+          exit 1
+        fi
+
+        git checkout develop
+        git pull origin develop
+        git checkout -b "release/v$VERSION" develop
+
+        # Aggiorna la versione nei file di progetto
+        find . -name "*.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
+
+        git add .
+        git commit -m "Bump version to $VERSION"
+        git push -u origin "release/v$VERSION"
+
+        echo "Created release/v$VERSION branch"
+
+    # Finalizza una release: merge in main e back in develop
+    - name: Finish Release Branch
+      if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main' && startsWith(github.head_ref, 'release/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'finish-release')
+      run: |
+        if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+          RELEASE_BRANCH="${{ github.head_ref }}"
+        else
+          RELEASE_BRANCH="release/v${{ github.event.inputs.version }}"
+        fi
+
+        VERSION=$(echo $RELEASE_BRANCH | sed 's/release\/v//')
+
+        git checkout main
+        git pull origin main
+
+        # Crea tag
+        git tag -a "v$VERSION" -m "Version $VERSION"
+        git push origin "v$VERSION"
+
+        # Merge main in develop
+        git checkout develop
+        git pull origin develop
+        git merge --no-ff -m "Merge main after release v$VERSION" origin/main
+        git push origin develop
+
+        echo "Release v$VERSION completed"
+
+    # Crea un hotfix branch da main
+    - name: Create Hotfix Branch
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'create-hotfix'
+      run: |
+        VERSION=${{ github.event.inputs.version }}
+        if [ -z "$VERSION" ]; then
+          echo "Version is required for create-hotfix action"
+          exit 1
+        fi
+
+        git checkout main
+        git pull origin main
+        git checkout -b "hotfix/v$VERSION" main
+
+        # Aggiorna la versione nei file di progetto
+        find . -name "*.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
+
+        git add .
+        git commit -m "Bump version to $VERSION for hotfix"
+        git push -u origin "hotfix/v$VERSION"
+
+        echo "Created hotfix/v$VERSION branch"
+
+    # Gestisce il merge di un hotfix in main
+    - name: Process Hotfix to Main
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main' && startsWith(github.head_ref, 'hotfix/')
+      run: |
+        HOTFIX_BRANCH="${{ github.head_ref }}"
+        VERSION=$(echo $HOTFIX_BRANCH | sed 's/hotfix\/v//')
+
+        git checkout main
+        git pull origin main
+
+        # Crea tag
+        git tag -a "v$VERSION" -m "Hotfix Version $VERSION"
+        git push origin "v$VERSION"
+
+        # Merge main in develop
+        git checkout develop
+        git pull origin develop
+        git merge --no-ff -m "Merge main after hotfix v$VERSION" origin/main
+        git push origin develop
+
+        echo "Hotfix v$VERSION completed"
