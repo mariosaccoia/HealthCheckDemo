@@ -34,8 +34,6 @@ bld/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
@@ -82,8 +80,6 @@ StyleCopReport.xml
 *.pgc
 *.pgd
 *.rsp
-# but not Directory.Build.rsp, as it configures directory-level build defaults
-!Directory.Build.rsp
 *.sbr
 *.tlb
 *.tli
@@ -99,20 +95,6 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
-
-# Chutzpah Test files
-_Chutzpah*
-
-# Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opendb
-*.opensdf
-*.sdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
 
 # Visual Studio profiler
 *.psess
@@ -133,21 +115,6 @@ $tf/
 _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
-
-# TeamCity is a build add-in
-_TeamCity*
-
-# DotCover is a Code Coverage Tool
-*.dotCover
-
-# AxoCover is a Code Coverage Tool
-.axoCover/*
-!.axoCover/settings.json
-
-# Coverlet is a free, cross platform Code Coverage Tool
-coverage*.json
-coverage*.xml
-coverage*.info
 
 # Visual Studio code coverage results
 *.coverage
@@ -241,14 +208,6 @@ ClientBin/
 *.pfx
 *.publishsettings
 orleans.codegen.cs
-
-# Including strong name files can present a security risk
-# (https://github.com/github/gitignore/pull/2483#issue-259490424)
-#*.snk
-
-# Since there are multiple workflows, uncomment next line to ignore bower_components
-# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
-#bower_components/
 
 # RIA/Silverlight projects
 Generated_Code/
@@ -378,7 +337,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
+# VS Code files for those working with multiple tools
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -398,3 +357,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+.idea/
